@@ -81,7 +81,7 @@ class Viewport {
 };
 
 struct Event {
-   enum Type {Left, Right, Up, Down, Quit};
+   enum Type {Left, Right, Up, Down, Quit, Freeze};
    Type type;
 };
 
@@ -104,9 +104,11 @@ class Pixels {
          Pixel () : x(0), y(0), color(0) {}
          Pixel (int x, int y, Uint32 color) : x(x), y(y), color(color) {}
       };
+
       typedef vector<Pixel> TPixels;
       TPixels pixels;
       int stepn, steps, stepw, stepe;
+      bool frozen;
       GlobalData* global;
       Viewport* viewport;
 };
@@ -285,9 +287,11 @@ void Viewport::putpixel (int x, int y, Uint32 color) {
    }
 }
 
-Pixels::Pixels (GlobalData* global) : global(global), viewport(global->viewport),
+Pixels::Pixels (GlobalData* global)
+:
+   global(global), viewport(global->viewport),
    pixels(TPixels(global->setup->pixels)), stepn(1), steps(1),
-   stepw(1), stepe(1)
+   stepw(1), stepe(1), frozen(false)
 {
    rinit ();
    for (int i = 0; i <= global->setup->pixels-1; i++) pixels[i] = Pixel(
@@ -317,6 +321,7 @@ void Pixels::render () {
 
 void Pixels::tick () {
    Uint32 rval;
+   if (frozen) return;
    int shift = 31;
    for (TPixels::iterator i = pixels.begin (); i != pixels.end (); i++) {
       for (int j = 1; j <= 8; j++) {
@@ -389,6 +394,12 @@ void Pixels::receiveEvent (const Event& evt) {
             ss << "step width south: " << steps;
             global->messages->pushMessage (ss.str ());
          }
+         break;
+      case Event::Freeze:
+         if (frozen) global->messages->pushMessage ("unfrozen");
+         else global->messages->pushMessage ("frozen");
+         frozen = !frozen;
+         break;
    }
 }
 
@@ -452,6 +463,9 @@ bool pollEvent (Event& event) {
                break;
             case SDLK_RIGHT:
                event.type = Event::Right;
+               break;
+            case (SDLK_f):
+               event.type = Event::Freeze;
                break;
             default:
                return false;
