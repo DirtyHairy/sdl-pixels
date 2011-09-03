@@ -81,7 +81,7 @@ class Viewport {
 };
 
 struct Event {
-   enum Type {Left, Right, Up, Down, Quit, Freeze};
+   enum Type {Left, Right, Up, Down, Quit, Freeze, Dump};
    Type type;
 };
 
@@ -400,6 +400,11 @@ void Pixels::receiveEvent (const Event& evt) {
          else global->messages->pushMessage ("frozen");
          frozen = !frozen;
          break;
+      case Event::Dump:
+         ss <<    "north: " << stepn << "   west: " << stepw;
+         ss << "   south: " << steps << "   east: " << stepe;
+         global->messages->pushMessage (ss.str ());
+         break;
    }
 }
 
@@ -466,6 +471,9 @@ bool pollEvent (Event& event) {
                break;
             case (SDLK_f):
                event.type = Event::Freeze;
+               break;
+            case (SDLK_d):
+               event.type = Event::Dump;
                break;
             default:
                return false;
