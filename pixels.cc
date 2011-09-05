@@ -6,6 +6,8 @@
 #include <exception>
 #include <vector>
 #include <list>
+#include <map>
+#include <utility>
 
 #include <SDL.h>
 #include <SDL_framerate.h>
@@ -81,8 +83,26 @@ class Viewport {
 };
 
 struct Event {
-   enum Type {Left, Right, Up, Down, Quit, Freeze, Dump};
+   enum Type {None, Left, Right, Up, Down, Quit, Freeze, Dump, SpeedUp, SpeedDown};
    Type type;
+
+   Event (const Type t) : type(t) {}
+   Event () : type(None) {}
+};
+
+class EventManager {
+   public:
+      EventManager (int delay=30, int repeat=15);
+
+      void tick ();
+      bool pollEvent (Event& evt);
+
+   private:
+      typedef map<Event::Type, int> TRepeaters;
+      TRepeaters repeaters;
+      int delay, repeat;
+      typedef list<Event> TQueue;
+      TQueue queue;
 };
 
 class Pixels {
@@ -107,7 +127,7 @@ class Pixels {
 
       typedef vector<Pixel> TPixels;
       TPixels pixels;
-      int stepn, steps, stepw, stepe;
+      int stepn, steps, stepw, stepe, speed;
       bool frozen;
       GlobalData* global;
       Viewport* viewport;
@@ -291,7 +311,7 @@ Pixels::Pixels (GlobalData* global)
 :
    global(global), viewport(global->viewport),
    pixels(TPixels(global->setup->pixels)), stepn(1), steps(1),
-   stepw(1), stepe(1), frozen(false)
+   stepw(1), stepe(1), frozen(false), speed(4)
 {
    rinit ();
    for (int i = 0; i <= global->setup->pixels-1; i++) pixels[i] = Pixel(
@@ -324,7 +344,7 @@ void Pixels::tick () {
    if (frozen) return;
    int shift = 31;
    for (TPixels::iterator i = pixels.begin (); i != pixels.end (); i++) {
-      for (int j = 1; j <= 8; j++) {
+      for (int j = 1; j <= speed; j++) {
          if (shift > 30) {
             rval = rnd ();
             shift = 0;
@@ -395,6 +415,16 @@ void Pixels::receiveEvent (const Event& evt) {
             global->messages->pushMessage (ss.str ());
          }
          break;
+      case Event::SpeedUp:
+         speed++;
+         ss << "speed: " << speed;
+         global->messages->pushMessage (ss.str ());
+         break;
+      case Event::SpeedDown:
+         if (speed > 1) speed--;
+         ss << "speed: " << speed;
+         global->messages->pushMessage (ss.str ());
+         break;
       case Event::Freeze:
          if (frozen) global->messages->pushMessage ("unfrozen");
          else global->messages->pushMessage ("frozen");
@@ -403,6 +433,7 @@ void Pixels::receiveEvent (const Event& evt) {
       case Event::Dump:
          ss <<    "north: " << stepn << "   west: " << stepw;
          ss << "   south: " << steps << "   east: " << stepe;
+         ss << "   speed: " << speed;
          global->messages->pushMessage (ss.str ());
          break;
    }
@@ -445,44 +476,77 @@ void ScreenMessage::render () {
    }
 }
 
-bool pollEvent (Event& event) {
-   SDL_Event evt;
-   if (!SDL_PollEvent (&evt)) return false;
-   switch (evt.type) {
-      case SDL_QUIT:
-         event.type = Event::Quit;
-         break;
-      case SDL_KEYDOWN:
-         switch (evt.key.keysym.sym) {
-            case SDLK_q:
-               event.type = Event::Quit;
-               break;
-            case SDLK_UP:
-               event.type = Event::Up;
-               break;
-            case SDLK_DOWN:
-               event.type = Event::Down;
-               break;
-            case SDLK_LEFT:
-               event.type = Event::Left;
-               break;
-            case SDLK_RIGHT:
-               event.type = Event::Right;
-               break;
-            case (SDLK_f):
-               event.type = Event::Freeze;
-               break;
-            case (SDLK_d):
-               event.type = Event::Dump;
-               break;
-            default:
-               return false;
-         }
-         break;
-      default:
-         return false;
-   }
+EventManager::EventManager (int delay, int repeat) :
+   delay(delay), repeat(repeat) {}
+
+bool EventManager::pollEvent (Event& evt) {
+   if (queue.empty ()) return false;
+   evt = queue.front ();
+   queue.pop_front ();
    return true;
+}
+
+void EventManager::tick () {
+   SDL_Event evt;
+   while (SDL_PollEvent (&evt)) {
+      bool valid;
+      Event::Type t;
+      switch (evt.type) {
+         case SDL_QUIT:
+            queue.push_back (Event (Event::Quit));
+            break;
+         case SDL_KEYDOWN:
+         case SDL_KEYUP:
+            valid = true;
+            switch (evt.key.keysym.sym) {
+               case SDLK_q:
+                  t = Event::Quit;
+                  break;
+               case SDLK_UP:
+                  t = Event::Up;
+                  break;
+               case SDLK_DOWN:
+                  t = Event::Down;
+                  break;
+               case SDLK_LEFT:
+                  t = Event::Left;
+                  break;
+               case SDLK_RIGHT:
+                  t = Event::Right;
+                  break;
+               case (SDLK_f):
+                  t = Event::Freeze;
+                  break;
+               case (SDLK_d):
+                  t = Event::Dump;
+                  break;
+               case (SDLK_PLUS):
+                  t = Event::SpeedUp;
+                  break;
+               case (SDLK_MINUS):
+                  t = Event::SpeedDown;
+                  break;
+               default:
+                  valid = false;
+            }
+            if (valid) {
+               if (evt.key.type == SDL_KEYDOWN) {
+                  queue.push_back (Event (t));
+                  repeaters[t] = 0;
+               } else {
+                  repeaters.erase (t);
+               }
+            }
+            break;
+         default:
+            break;
+      }
+  }
+  for (TRepeaters::iterator i = repeaters.begin (); i != repeaters.end (); i++) {
+      if (i->second >= delay && ((i->second - delay) % repeat == 0))
+         queue.push_back (i->first);
+      i->second++;
+  }
 }
 
 int main (int argc, char* argv[]) {
@@ -497,6 +561,8 @@ int main (int argc, char* argv[]) {
       global->messages->render ();
       global->viewport->flip ();
 
+      EventManager eventSource;
+
       class EDone {};
       FPSmanager fps;
       int frame = 1;
@@ -504,7 +570,8 @@ int main (int argc, char* argv[]) {
       SDL_setFramerate (&fps, 120);
       try {while (true) {
          Event evt;
-         while (pollEvent (evt)) {
+         eventSource.tick ();
+         while (eventSource.pollEvent (evt)) {
             if (evt.type == Event::Quit) throw EDone ();
             global->pixels->receiveEvent (evt);
          }
