@@ -15,14 +15,44 @@
 
 using namespace std;
 
-class EFatal: public exception {
+class EPixelsExcpt: public exception {
    public:
-      EFatal (string msg) : msg(msg) {}
-      ~EFatal () throw() {}
+      EPixelsExcpt (const string& msg) : msg(msg) {}
+      ~EPixelsExcpt () throw () {}
       const char* what () {return msg.c_str ();}
 
-   private:
+   protected:
       string msg;
+};
+
+class EFatal: public EPixelsExcpt {
+   public:
+      EFatal (const string& msg) : EPixelsExcpt(msg) {}
+};
+
+class EBug: public EPixelsExcpt {
+   public:
+      EBug (const string& msg) : EPixelsExcpt(msg) {}
+};
+
+class Rng {
+   public:
+      enum Type {Default, MultiplyWithCarry, LC1, LC2};
+
+      Rng (const Type t=Default);
+      const string name () const;
+      inline const Uint32 rnd ();
+      void reset (const Type t);
+      void cycle ();
+
+      int bits;
+      Uint32 max;
+
+   private:
+      Uint32 state[2];
+      Type type;
+
+      const int getBitsGuaranteed () const;
 };
 
 class Setup;
@@ -39,6 +69,7 @@ struct GlobalData {
    Viewport* viewport;
    Pixels* pixels;
    ScreenMessage* messages;
+   Rng* rng;
 };
 
 class Setup {
@@ -83,7 +114,8 @@ class Viewport {
 };
 
 struct Event {
-   enum Type {None, Left, Right, Up, Down, Quit, Freeze, Dump, SpeedUp, SpeedDown};
+   enum Type {None, Left, Right, Up, Down, Quit, Freeze, Dump, SpeedUp, SpeedDown,
+      ChangeRng};
    Type type;
 
    Event (const Type t) : type(t) {}
@@ -113,8 +145,6 @@ class Pixels {
       void receiveEvent (const Event& e);
 
    private:
-      Uint32 mw, mz;
-      inline Uint32 rnd ();
       void rinit ();
 
       struct Pixel {
@@ -131,6 +161,7 @@ class Pixels {
       bool frozen;
       GlobalData* global;
       Viewport* viewport;
+      Rng* rng;
 };
 
 class ScreenMessage {
@@ -157,12 +188,13 @@ class ScreenMessage {
 };
 
 
-GlobalData::GlobalData () : setup(0), viewport(0), messages(0) {}
+GlobalData::GlobalData () : setup(0), viewport(0), messages(0), rng(0) {}
 
 GlobalData::~GlobalData () {
    if (setup) delete setup;
    if (viewport) delete viewport;
-//   if (messages) delete messages;
+   if (messages) delete messages;
+   if (rng) delete rng;
 }
 
 void Setup::giveHelp (int status, string msg) const {
@@ -307,29 +339,110 @@ void Viewport::putpixel (int x, int y, Uint32 color) {
    }
 }
 
+Rng::Rng (const Type t) : type(t) {
+   reset (t);
+}
+
+const string Rng::name () const {
+   switch (type) {
+      case Default:
+         return "default";
+      case MultiplyWithCarry:
+         return "multiply with carry";
+      case LC1:
+         return "linear congruential 1 (numerical recepies)";
+      case LC2:
+         return "linear congruential 2 (RtlUniform)";
+      default:
+         throw EBug ("Rng::name: invalid rng type");
+   }
+}
+
+void Rng::reset (const Type t) {
+   type = t;
+   switch (type) {
+      case Default:
+         srand (time (0));
+         max = RAND_MAX;
+         break;
+      case MultiplyWithCarry:
+         srand (time (0));
+         state[0] = rand ();
+         state[1] = rand ();
+         max = 0xFFFFFFFF;
+         break;
+      case LC1:
+         srand (time (0));
+         state[0] = rand ();
+         max = 0xFFFFFFFF;
+         break;
+      case LC2:
+         srand (time (0));
+         state[0] = rand ();
+         max = 0x0FFFFFFF - 1;
+         break;
+      default:
+         throw EBug ("Rng::reset: invalid rng type");
+   }
+   for (int i = 0; i <= 31; i++) {
+      if ((1 << i) >= max) {
+         bits = i+1;
+         break;
+      }
+   }
+}
+
+void Rng::cycle () {
+   switch (type) {
+      case Default:
+         reset (MultiplyWithCarry);
+         break;
+      case MultiplyWithCarry:
+         reset (LC1);
+         break;
+      case LC1:
+         reset (LC2);
+         break;
+      case LC2:
+         reset (Default);
+         break;
+      default:
+         throw EBug ("Rng::cycle: invalid rng type");
+   }
+}
+
+inline const Uint32 Rng::rnd () {
+   switch (type) {
+      case Default:
+         return rand ();
+         break;
+      case MultiplyWithCarry:
+         state[0] = 36969 * (state[0] & 65535) + (state[1] >> 16);
+         state[1] = 18000 * (state[1] & 65535) + (state[1] >> 16);
+         return (state[0] << 16) + state[1];
+         break;
+      case LC1:
+         return (state[0] = 1664525 * state[0] + 1013904223);
+         break;
+      case LC2:
+         return (state[0] = (2147483629 * state[0] + 2147483587) % 0x0FFFFFFF);
+         break;
+      default:
+         throw EBug ("Rng::rnd: invalid rng type");
+   }
+}
+
 Pixels::Pixels (GlobalData* global)
 :
    global(global), viewport(global->viewport),
    pixels(TPixels(global->setup->pixels)), stepn(1), steps(1),
-   stepw(1), stepe(1), frozen(false), speed(4)
+   stepw(1), stepe(1), frozen(false), speed(4), rng(global->rng)
 {
-   rinit ();
    for (int i = 0; i <= global->setup->pixels-1; i++) pixels[i] = Pixel(
-      rnd () % viewport->resx,
-      rnd () % viewport->resy,
-      viewport->mapColor (rnd () % 256, rnd () % 256, rnd () % 256)
+      rng->rnd () % viewport->resx,
+      rng->rnd () % viewport->resy,
+      viewport->mapColor (rng->rnd () % 256, rng->rnd () % 256, rng->rnd () % 256)
    );
-}
-
-void Pixels::rinit () {
-   mw = rand();
-   mz = rand();
-}
-
-Uint32 Pixels::rnd () {
-   mz = 36969 * (mz & 65535) + (mz >> 16);
-   mw = 18000 * (mw & 65535) + (mw >> 16);
-   return (mz << 16) + mw;
 }
 
 void Pixels::render () {
@@ -342,11 +455,12 @@ void Pixels::render () {
 void Pixels::tick () {
    Uint32 rval;
    if (frozen) return;
-   int shift = 31;
+   int shift = rng->bits - 1;
+   int mshift = rng->bits - 2;
    for (TPixels::iterator i = pixels.begin (); i != pixels.end (); i++) {
       for (int j = 1; j <= speed; j++) {
-         if (shift > 30) {
-            rval = rnd ();
+         if (shift > mshift) {
+            rval = rng->rnd ();
             shift = 0;
          }
          switch ((rval >> shift) & 3) {
@@ -430,11 +544,16 @@ void Pixels::receiveEvent (const Event& evt) {
          else global->messages->pushMessage ("frozen");
          frozen = !frozen;
          break;
+      case Event::ChangeRng:
+         rng->cycle ();
+         global->messages->pushMessage ("rng set to " + rng->name ());
+         break;
       case Event::Dump:
          ss <<    "north: " << stepn << "   west: " << stepw;
          ss << "   south: " << steps << "   east: " << stepe;
          ss << "   speed: " << speed;
          global->messages->pushMessage (ss.str ());
+         global->messages->pushMessage ("random number generator: " + rng-> name ());
          break;
    }
 }
@@ -526,6 +645,9 @@ void EventManager::tick () {
                case (SDLK_MINUS):
                   t = Event::SpeedDown;
                   break;
+               case (SDLK_r):
+                  t = Event::ChangeRng;
+                  break;
                default:
                   valid = false;
             }
@@ -550,11 +672,11 @@ void EventManager::tick () {
 }
 
 int main (int argc, char* argv[]) {
+   GlobalData* global = new GlobalData;
    try {
-      srand (time (0));
-      GlobalData* global = new GlobalData;
       global->setup = new Setup(argc, argv);
       global->viewport = new Viewport (global);
+      global->rng = new Rng;
       global->pixels = new Pixels(global);
       global->messages = new ScreenMessage (global, 5, 5, 5, 255, 255, 255);
       global->pixels->render ();
@@ -590,11 +712,13 @@ int main (int argc, char* argv[]) {
          SDL_framerateDelay (&fps);
       }}
       catch (EDone) {}
-
-      delete global;
    }
    catch (EFatal e) {
       cout << "FATAL: " << e.what () << "\n";
       return 1;
    }
+   catch (EBug e) {
+      cout << "BUG: " << e.what () << "\n";
+   }
+   delete global;
 }
