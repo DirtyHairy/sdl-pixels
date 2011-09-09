@@ -379,7 +379,7 @@ void Rng::reset (const Type t) {
       case LC2:
          srand (time (0));
          state[0] = rand ();
-         max = 0x0FFFFFFF - 1;
+         max = 0x3FFFFFFF - 1;
          break;
       default:
          throw EBug ("Rng::reset: invalid rng type");
@@ -425,7 +425,7 @@ inline const Uint32 Rng::rnd () {
          return (state[0] = 1664525 * state[0] + 1013904223);
          break;
       case LC2:
-         return (state[0] = (2147483629 * state[0] + 2147483587) % 0x0FFFFFFF);
+         return (state[0] = (2147483629 * state[0] + 2147483587) % 0x3FFFFFFF);
          break;
       default:
          throw EBug ("Rng::rnd: invalid rng type");
