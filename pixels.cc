@@ -3,7 +3,6 @@
 #include <cstdlib>
 #include <ctime>
 #include <sstream>
-#include <exception>
 #include <vector>
 #include <list>
 #include <map>
@@ -13,27 +12,10 @@
 #include <SDL_framerate.h>
 #include <SDL_gfxPrimitives.h>
 
+#include "exceptions.h"
+
 using namespace std;
 
-class EPixelsExcpt: public exception {
-   public:
-      EPixelsExcpt (const string& msg) : msg(msg) {}
-      ~EPixelsExcpt () throw () {}
-      const char* what () {return msg.c_str ();}
-
-   protected:
-      string msg;
-};
-
-class EFatal: public EPixelsExcpt {
-   public:
-      EFatal (const string& msg) : EPixelsExcpt(msg) {}
-};
-
-class EBug: public EPixelsExcpt {
-   public:
-      EBug (const string& msg) : EPixelsExcpt(msg) {}
-};
 
 class Rng {
    public:
