@@ -5,14 +5,14 @@
 
 using namespace std;
 
-// Unique
-
 namespace {
    static Unique::TId nextId = 0;
    static const Unique::TId maxId = 0UL - 1UL;
    typedef list<Unique::TId> TRecycleBin;
    static TRecycleBin recycle_bin;
 }
+
+// Unique
 
 Unique::Unique () {
    if (recycle_bin.size () > 0) {
@@ -30,4 +30,8 @@ Unique::~Unique () {
 
 const Unique::TId Unique::getId () const {
    return id;
+}
+
+Unique& Unique::operator= (const Unique&) {
+   return *this;
 }
