@@ -14,7 +14,7 @@ class Dispatcher : public Actor {
       Dispatcher ();
       void appendActor (Actor* actor);
       void deleteActor (Actor* actor);
-      void deleteActor (const Unique::TId id);
+      void deleteActor (Unique::TId id);
 
       void render ();
       void tick ();

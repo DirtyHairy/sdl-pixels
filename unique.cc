@@ -1,4 +1,4 @@
-#include <list>
+#include <deque>
 
 #include "unique.h"
 #include "exceptions.h"
@@ -8,7 +8,7 @@ using namespace std;
 namespace {
    static Unique::TId nextId = 0;
    static const Unique::TId maxId = 0UL - 1UL;
-   typedef list<Unique::TId> TRecycleBin;
+   typedef deque<Unique::TId> TRecycleBin;
    static TRecycleBin recycle_bin;
 }
 

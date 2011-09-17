@@ -15,7 +15,7 @@ void Dispatcher::appendActor (Actor* actor) {
    actors_map[id] = (--actors.end ());
 }
 
-void Dispatcher::deleteActor (const Unique::TId id) {
+void Dispatcher::deleteActor (Unique::TId id) {
    if (actors_map.count (id) == 0) {
       cout << "WARNING: Dispatcher::deleteActor: attempted to delete "
          << "nonexisting actor " << id << "!\n";
