@@ -2,14 +2,15 @@
 #define ACTOR_H
 
 #include "unique.h"
+#include "events.h"
 
 using namespace std;
 
 class Actor : public Unique {
    public:
-      virtual void tick () = 0;
-      virtual void render () = 0;
-      virtual void receiveEvent () = 0;
+      virtual void tick ();
+      virtual void render ();
+      virtual void receiveEvent (const Event&);
 
    protected:
       Actor ();

@@ -5,13 +5,10 @@
 #include <SDL.h>
 
 #include "global.h"
-#include "viewport.h"
-#include "rng.h"
 #include "events.h"
-#include "screenmessage.h"
-#include "setup.h"
+#include "actor.h"
 
-class Pixels {
+class Pixels : public Actor {
    public:
       Pixels (GlobalData*);
       void tick ();
@@ -32,8 +29,6 @@ class Pixels {
       int stepn, steps, stepw, stepe, speed;
       bool frozen;
       GlobalData* global;
-      Viewport* viewport;
-      Rng* rng;
 };
 
 #endif // PIXELS_H

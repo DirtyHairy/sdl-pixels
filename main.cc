@@ -26,8 +26,10 @@ int main (int argc, char* argv[]) {
       global->rng = new Rng;
       global->pixels = new Pixels(global);
       global->messages = new ScreenMessage (global, 5, 5, 5, 255, 255, 255);
-      global->pixels->render ();
-      global->messages->render ();
+      global->dispatcher = new Dispatcher;
+      global->dispatcher->appendActor (global->pixels);
+      global->dispatcher->appendActor (global->messages);
+      global->dispatcher->render ();
       global->viewport->flip ();
 
       EventManager eventSource;
@@ -42,17 +44,15 @@ int main (int argc, char* argv[]) {
          eventSource.tick ();
          while (eventSource.pollEvent (evt)) {
             if (evt.type == Event::Quit) throw EDone ();
-            global->pixels->receiveEvent (evt);
+            global->dispatcher->receiveEvent (evt);
          }
 
-         global->pixels->tick ();
-         global->messages->tick ();
+         global->dispatcher->tick ();
 
          if (frame++ == 2) {
             frame = 0;
             global->viewport->clear ();
-            global->pixels->render ();
-            global->messages->render ();
+            global->dispatcher->render ();
             global->viewport->flip ();
          }
 

@@ -5,10 +5,11 @@
 #include <string>
 
 #include "global.h"
+#include "actor.h"
 
 using namespace std;
 
-class ScreenMessage {
+class ScreenMessage : public Actor {
    public:
       ScreenMessage (GlobalData* global, int n, int x, int y, int r,
          int g, int b, int fade=60, int live=120);

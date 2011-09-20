@@ -2,6 +2,7 @@
 #define GLOBAL_H
 
 #include "rng.h"
+#include "dispatcher.h"
 
 class Setup;
 class Viewport;
@@ -18,6 +19,7 @@ struct GlobalData {
    Pixels* pixels;
    ScreenMessage* messages;
    Rng* rng;
+   Dispatcher* dispatcher;
 };
 
 #endif // GLOBAL_H

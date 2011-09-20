@@ -6,6 +6,7 @@
 
 #include "actor.h"
 #include "unique.h"
+#include "events.h"
 
 using namespace std;
 
@@ -18,7 +19,7 @@ class Dispatcher : public Actor {
 
       void render ();
       void tick ();
-      void receiveEvent ();
+      void receiveEvent (const Event& e);
 
    private:
       Dispatcher (const Dispatcher&);

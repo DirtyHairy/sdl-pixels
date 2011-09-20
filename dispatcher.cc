@@ -39,7 +39,7 @@ void Dispatcher::render () {
       (*i)->render ();
 }
 
-void Dispatcher::receiveEvent () {
+void Dispatcher::receiveEvent (const Event& e) {
    for (TActors::iterator i = actors.begin (); i != actors.end (); i++)
-      (*i)->receiveEvent ();
+      (*i)->receiveEvent (e);
 }
