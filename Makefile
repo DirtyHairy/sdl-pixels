@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -O2 -march=native -mno-avx
+CXXFLAGS = -O2 -march=native -mno-avx -g
 LDFLAGS = 
 
 CXXFLAGS += $(shell sdl-config --cflags)
