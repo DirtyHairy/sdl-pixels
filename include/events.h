@@ -21,6 +21,7 @@ class EventManager {
 
       void tick ();
       bool pollEvent (Event& evt);
+      void getMouseCoords (int& x, int& y) const;
 
    private:
       typedef map<Event::Type, int> TRepeaters;
@@ -28,6 +29,8 @@ class EventManager {
       int delay, repeat;
       typedef list<Event> TQueue;
       TQueue queue;
+
+      int mouse_x, mouse_y;
 };
 
 #endif // EVENTS_H

@@ -7,7 +7,7 @@ LDFLAGS += -lSDL_gfx $(shell sdl-config --libs)
 
 objects = main.o exceptions.o unique.o actor.o dispatcher.o \
 	rng.o setup.o global.o viewport.o events.o pixels.o \
-	screenmessage.o
+	screenmessage.o cursor.o
 
 pixels: $(objects)
 	$(CXX) -o $@ $^ $(LDFLAGS)

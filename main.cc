@@ -14,6 +14,7 @@
 #include "events.h"
 #include "pixels.h"
 #include "screenmessage.h"
+#include "cursor.h"
 
 using namespace std;
 
@@ -27,12 +28,13 @@ int main (int argc, char* argv[]) {
       global->pixels = new Pixels(global);
       global->messages = new ScreenMessage (global, 5, 5, 5, 255, 255, 255);
       global->dispatcher = new Dispatcher;
+      global->event_source = new EventManager;
+      global->cursor = new Cursor (global);
       global->dispatcher->appendActor (global->pixels);
+      global->dispatcher->appendActor (global->cursor);
       global->dispatcher->appendActor (global->messages);
       global->dispatcher->render ();
       global->viewport->flip ();
-
-      EventManager eventSource;
 
       class EDone {};
       FPSmanager fps;
@@ -41,8 +43,8 @@ int main (int argc, char* argv[]) {
       SDL_setFramerate (&fps, 120);
       try {while (true) {
          Event evt;
-         eventSource.tick ();
-         while (eventSource.pollEvent (evt)) {
+         global->event_source->tick ();
+         while (global->event_source->pollEvent (evt)) {
             if (evt.type == Event::Quit) throw EDone ();
             global->dispatcher->receiveEvent (evt);
          }

@@ -46,6 +46,8 @@ Viewport::Viewport (GlobalData* global) : resx(global->setup->resx),
    }
 
    gfxPrimitivesSetFont (0, 0, 0);
+   SDL_ShowCursor (SDL_DISABLE);
+   SDL_EnableKeyRepeat (0, 0);
 }
 
 void Viewport::flip () {

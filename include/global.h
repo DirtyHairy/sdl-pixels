@@ -8,6 +8,8 @@ class Setup;
 class Viewport;
 class Pixels;
 class ScreenMessage;
+class EventManager;
+class Cursor;
 
 struct GlobalData {
    
@@ -20,6 +22,8 @@ struct GlobalData {
    ScreenMessage* messages;
    Rng* rng;
    Dispatcher* dispatcher;
+   EventManager* event_source;
+   Cursor* cursor;
 };
 
 #endif // GLOBAL_H

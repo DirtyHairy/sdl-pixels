@@ -5,7 +5,10 @@
 using namespace std;
 
 EventManager::EventManager (int delay, int repeat) :
-   delay(delay), repeat(repeat) {}
+   delay(delay), repeat(repeat)
+{
+   SDL_GetMouseState (&mouse_x, &mouse_y);
+}
 
 bool EventManager::pollEvent (Event& evt) {
    if (queue.empty ()) return false;
@@ -78,5 +81,10 @@ void EventManager::tick () {
          queue.push_back (i->first);
       i->second++;
   }
+  SDL_GetMouseState (&mouse_x, &mouse_y);
 }
 
+void EventManager::getMouseCoords (int& x, int& y) const {
+   x = mouse_x;
+   y = mouse_y;
+}
