@@ -15,6 +15,7 @@
 #include "pixels.h"
 #include "screenmessage.h"
 #include "cursor.h"
+#include "state.h"
 
 using namespace std;
 
@@ -26,10 +27,12 @@ int main (int argc, char* argv[]) {
       global->viewport = new Viewport (global);
       global->rng = new Rng;
       global->pixels = new Pixels(global);
-      global->messages = new ScreenMessage (global, 5, 5, 5, 255, 255, 255);
+      global->messages = new ScreenMessage (global, 10, 5, 5, 255, 255, 255);
       global->dispatcher = new Dispatcher;
       global->event_source = new EventManager;
       global->cursor = new Cursor (global);
+      global->state = new State (global);
+      global->dispatcher->appendActor (global->state);
       global->dispatcher->appendActor (global->pixels);
       global->dispatcher->appendActor (global->cursor);
       global->dispatcher->appendActor (global->messages);

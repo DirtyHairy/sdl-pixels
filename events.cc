@@ -26,6 +26,26 @@ void EventManager::tick () {
          case SDL_QUIT:
             queue.push_back (Event (Event::Quit));
             break;
+         case SDL_MOUSEBUTTONDOWN:
+            switch (evt.button.button) {
+               case SDL_BUTTON_LEFT:
+                  queue.push_back (Event (Event::StartMagnetic));
+                  break;
+               case SDL_BUTTON_RIGHT:
+                  queue.push_back (Event (Event::StartFollow));
+                  break;
+            }
+            break;
+         case SDL_MOUSEBUTTONUP:
+            switch (evt.button.button) {
+               case SDL_BUTTON_LEFT:
+                  queue.push_back (Event (Event::StopMagnetic));
+                  break;
+               case SDL_BUTTON_RIGHT:
+                  queue.push_back (Event (Event::StopFollow));
+                  break;
+               }
+               break;
          case SDL_KEYDOWN:
          case SDL_KEYUP:
             valid = true;

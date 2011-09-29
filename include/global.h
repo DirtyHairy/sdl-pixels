@@ -10,6 +10,7 @@ class Pixels;
 class ScreenMessage;
 class EventManager;
 class Cursor;
+class State;
 
 struct GlobalData {
    
@@ -24,6 +25,7 @@ struct GlobalData {
    Dispatcher* dispatcher;
    EventManager* event_source;
    Cursor* cursor;
+   State* state;
 };
 
 #endif // GLOBAL_H

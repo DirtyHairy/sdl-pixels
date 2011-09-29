@@ -4,6 +4,8 @@
 #include <sstream>
 #include <SDL.h>
 
+#include <iostream>
+
 #include "global.h"
 
 using namespace std;

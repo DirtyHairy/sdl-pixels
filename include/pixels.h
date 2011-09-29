@@ -27,7 +27,6 @@ class Pixels : public Actor {
       typedef vector<Pixel> TPixels;
       TPixels pixels;
       int stepn, steps, stepw, stepe, speed;
-      bool frozen;
       GlobalData* global;
 };
 
