@@ -71,22 +71,22 @@ void Pixels::tick () {
                switch ((rval >> shift) & 3) {
                   case 0:
                      step = (px > i->x)?((px - i->x) / 10 + 1):1;
-                     step = (step>5)?10:step;
+                     if (step > 7) step = 7;
                      if ((i->x += step) > xmax) i->x -= step;
                      break;
                   case 1:
                      step = (px < i->x)?((i->x - px) / 10 + 1):1;
-                     step = (step>5)?10:step;
+                     if (step > 7) step = 7;
                      if ((i->x -= step) < 0) i->x += step;
                      break;
                   case 2:  
                      step = (py > i->y)?((py - i->y) / 10 + 1):1;
-                     step = (step>5)?10:step;
+                     if (step > 7) step = 7;
                      if ((i->y += step) > ymax) i->y -= step;
                      break;
                   case 3:
                      step = (py < i->y)?((i->y - py) / 10 + 1):1;
-                     step = (step>5)?10:step;
+                     if (step > 7) step = 7;
                      if ((i->y -= step) < 0) i->y += step;
                      break;
                }
