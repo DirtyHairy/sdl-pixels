@@ -27,7 +27,8 @@ int main (int argc, char* argv[]) {
       global->viewport = new Viewport (global);
       global->rng = new Rng;
       global->pixels = new Pixels(global);
-      global->messages = new ScreenMessage (global, 10, 5, 5, 255, 255, 255);
+      global->messages = new ScreenMessage (global,
+         global->setup->messages, 5, 5, 255, 255, 255);
       global->dispatcher = new Dispatcher;
       global->event_source = new EventManager;
       global->cursor = new Cursor (global);

@@ -10,7 +10,7 @@ class Setup {
       Setup (int argc, char* argv[]);
 
       bool fullscreen, verbose, shadow;
-      int resx, resy, bpp, pixels;
+      int resx, resy, bpp, pixels, messages;
 
    private:
       struct ParseState {

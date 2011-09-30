@@ -15,6 +15,7 @@ void Setup::giveHelp (int status, string msg) const {
    cout << "   -r, --res x y            : resolution\n";
    cout << "   --shadow                 : use shadow buffer\n";
    cout << "   -n, --pixels n           : number of pixels\n";
+   cout << "   -m, --messages n         : message queue length\n";
    exit (status);
 }
 
@@ -29,7 +30,7 @@ bool Setup::popInt (int& val, Setup::ParseState& state) const {
 }
 
 Setup::Setup (int argc, char* argv[]) : fullscreen(false), resx(640),
-   resy(480), bpp(32), verbose(true), shadow(false), pixels(100)
+   resy(480), bpp(32), verbose(true), shadow(false), pixels(100), messages(5)
 {
    ParseState state (argc, argv);
    for (state.iarg = 1; state.iarg <= state.argc-1; state.iarg++) {
@@ -49,6 +50,14 @@ Setup::Setup (int argc, char* argv[]) : fullscreen(false), resx(640),
          if (!popInt (pixels, state)) giveHelp (1, "integer expected");
          if (pixels <= 0) giveHelp (1, "n must be positive definite");
       }
+      else if (arg == "-m" || arg == "--messages") {
+         if (!popInt (messages, state)) giveHelp (1, "integer expected");
+         if (messages <= 1) giveHelp (1, "positive integer expected");
+      }
       else giveHelp (1, "unknown argument '" + arg + "'");
+   }
+   if (messages > resy / 10) {
+      messages = resy / 10;
+      cerr << "WARNING: message queue length reduced to " << messages << ".\n";
    }
 }
