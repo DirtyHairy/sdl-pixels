@@ -12,7 +12,7 @@ using namespace std;
 class ScreenMessage : public Actor {
    public:
       ScreenMessage (GlobalData* global, int n, int x, int y, int r,
-         int g, int b, int fade=30, int live=60);
+         int g, int b, int fade=60, int live=120);
       ~ScreenMessage () {};
       void pushMessage (const string& msg);
       void clear ();

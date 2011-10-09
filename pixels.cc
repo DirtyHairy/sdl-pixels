@@ -16,9 +16,8 @@ namespace {
 
 // *** Pixels
 
-Pixels::Pixels (GlobalData* global)
-:
-   global(global), pixels(TPixels(global->setup->pixels))
+Pixels::Pixels (GlobalData* global) : lobal(global),
+   pixels(TPixels(global->setup->pixels)), vecx(0), vecy(0), speed(4)
 {
    Rng* rng = global->rng;
    Viewport* viewport = global->viewport;
@@ -46,12 +45,17 @@ const string PixelsDiscrete::description () const {
 }
 
 PixelsDiscrete::PixelsDiscrete (GlobalData* global) : Pixels(global), 
-   stepn(1), steps(1), stepw(1), stepe(1), speed(8)
+   stepn(1), steps(1), stepw(1), stepe(1)
 {}
 
 PixelsDiscrete::PixelsDiscrete (const Pixels& src) : Pixels(src),
-   stepn(1), steps(1), stepw(1), stepe(1), speed(8)
-{}
+   stepn(1), steps(1), stepw(1), stepe(1)
+{
+   if (vecx > 0) stepe =  vecx + 1;
+   if (vecx < 0) stepw = -vecx + 1;
+   if (vecy > 0) stepn =  vecy + 1;
+   if (vecy < 0) steps = -vecy + 1;
+}
 
 void PixelsDiscrete::tick () {
    if (global->state->isFrozen ()) return;
@@ -122,6 +126,7 @@ void PixelsDiscrete::tick () {
 void PixelsDiscrete::receiveEvent (const Event& evt) {
    stringstream ss;
    ScreenMessage* messages = global->messages;
+   bool recalc = false;
    switch (evt.type) {
       case Event::Left:
          if (stepe > 1) {
@@ -133,6 +138,7 @@ void PixelsDiscrete::receiveEvent (const Event& evt) {
             ss << "step width west: " << stepw;
             messages->pushMessage (ss.str ());
          }
+         recalc = true;
          break;
       case Event::Right:
          if (stepw > 1) {
@@ -144,6 +150,7 @@ void PixelsDiscrete::receiveEvent (const Event& evt) {
             ss << "step width east: " << stepe;
             messages->pushMessage (ss.str ());
          }
+         recalc = true;
          break;
       case Event::Up:
          if (steps > 1) {
@@ -155,6 +162,7 @@ void PixelsDiscrete::receiveEvent (const Event& evt) {
             ss << "step width north: " << stepn;
             messages->pushMessage (ss.str ());
          }
+         recalc = true;
          break;
       case Event::Down:
          if (stepn > 1) {
@@ -166,6 +174,7 @@ void PixelsDiscrete::receiveEvent (const Event& evt) {
             ss << "step width south: " << steps;
             messages->pushMessage (ss.str ());
          }
+         recalc = true;
          break;
       case Event::SpeedUp:
          speed++;
@@ -185,6 +194,14 @@ void PixelsDiscrete::receiveEvent (const Event& evt) {
          messages->pushMessage (ss.str ());
          break;
    }
+   if (recalc) {
+      if (stepe > 1) vecx = stepe;
+      else if (stepw > 1) vecx = -stepw;
+      else vecx = 0;
+      if (stepn > 1) vecy = stepn;
+      else if (steps > 1) vecy = -steps;
+      else vecy = 0;
+   }
 }
 
 // ### PixelsDiscrete
@@ -196,14 +213,24 @@ const string PixelsContinuous::description () const {
 }
 
 PixelsContinuous::PixelsContinuous (GlobalData* global) : Pixels(global),
-   speed(8), length(0), vecx(0), vecy(0), rotxx(1), rotxy(0), rotyx(0),
-   rotyy(1)
+   length(0), rotxx(1), rotxy(0), rotyx(0), rotyy(1)
 {}
 
 PixelsContinuous::PixelsContinuous (const Pixels& src) : Pixels(src),
-   speed(8), length(0), vecx(0), vecy(0), rotxx(1), rotxy(0), rotyx(0),
-   rotyy(1)
-{}
+   rotxx(1), rotxy(0), rotyx(0), rotyy(1)
+{
+   recalcPars ();
+}
+
+void PixelsContinuous::recalcPars () {
+   length = sqrt (vecx*vecx + vecy*vecy);
+   if (length > 0) {
+      rotxx = rotyy = vecx / length;
+      rotyx = vecy / length; rotxy = - rotyx;
+   } else {
+      rotxx = 1; rotyy = 1; rotxy = rotyx = 0;
+   }
+}
 
 void PixelsContinuous::tick () {
    Rng* rng = global->rng;
@@ -214,9 +241,9 @@ void PixelsContinuous::tick () {
    for (TPixels::iterator i = pixels.begin (); i < pixels.end (); i++) {
       float phi = rng->rnd_unit () * 2 * pi;
       float dx = cos (phi) * sqrt_speed, dy = sin (phi) * sqrt_speed;
-      if (dx > 0) dx += length * speed;
+      if (dx > 0) dx += length * speed / 2;
       int x = floor (i->x + rotxx * dx + rotxy * dy + 0.5);
-      int y = floor (i->y - rotyx * dx + rotyy * dy + 0.5);
+      int y = floor (i->y - rotyx * dx - rotyy * dy + 0.5);
       if ((x >= 0) && (x < resx)) i->x = x;
       if ((y >= 0) && (y < resy)) i->y = y;
    }
@@ -265,14 +292,7 @@ void PixelsContinuous::receiveEvent (const Event& evt) {
    if (recalc) {
       ss << "movement vector: (" << vecx << ", " << vecy << ")";
       messages->pushMessage (ss.str ());
-      length = sqrt (vecx*vecx + vecy*vecy);
-      float phi;
-      if       (vecy > 0) phi =  acos (float (vecx) / length);
-      else if  (vecy < 0) phi = -acos (float (vecx) / length);
-      else                phi = (vecx >= 0)?0:(-pi);
-      rotxx = cos (phi);   rotxy = -sin (phi);
-      rotyx = -rotxy;      rotyy = rotxx;
-      messages->pushMessage (ss.str ());
+      recalcPars ();
    }
 }
 

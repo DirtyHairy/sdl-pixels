@@ -14,6 +14,7 @@ class Dispatcher : public Actor {
    public:
       Dispatcher ();
       void appendActor (Actor* actor);
+      void replaceActor (Actor* old_actor, Actor* new_actor);
       void deleteActor (Actor* actor);
       void deleteActor (Unique::TId id);
 

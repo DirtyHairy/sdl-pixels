@@ -26,7 +26,11 @@ class Pixels : public Actor {
 
       typedef vector<Pixel> TPixels;
       TPixels pixels;
+      int speed, vecx, vecy;
       GlobalData* global;
+
+   private:
+      Pixels ();
 };
 
 class PixelsDiscrete : public Pixels {
@@ -39,7 +43,7 @@ class PixelsDiscrete : public Pixels {
       const string description () const;
 
    private:
-      int stepn, steps, stepw, stepe, speed;
+      int stepn, steps, stepw, stepe;
 };
 
 class PixelsContinuous : public Pixels {
@@ -52,9 +56,10 @@ class PixelsContinuous : public Pixels {
       const string description () const;
 
    private:
-      float speed, length;
-      int vecx, vecy;
+      float length;
       float rotxx, rotxy, rotyx, rotyy;
+      
+      void recalcPars ();
 };
 
 Pixels* cyclePixels (const Pixels* old);

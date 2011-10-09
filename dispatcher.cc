@@ -15,9 +15,24 @@ void Dispatcher::appendActor (Actor* actor) {
    actors_map[id] = (--actors.end ());
 }
 
+void Dispatcher::replaceActor (Actor* old_actor, Actor* new_actor) {
+   Unique::TId id = old_actor->getId ();
+   if (actors_map.count (id) == 0) {
+      cerr << "WARNING: Dispatcher::replaceActor: attempted to replace "
+         << "nonexisting actor " << id << " with " << new_actor->getId ()
+         << " - appending instead!";
+      appendActor (new_actor);
+   } else {
+      TActors::iterator i = actors_map[id];
+      *i = new_actor;
+      actors_map.erase (id);
+      actors_map[new_actor->getId ()] = i;
+   }
+}
+
 void Dispatcher::deleteActor (Unique::TId id) {
    if (actors_map.count (id) == 0) {
-      cout << "WARNING: Dispatcher::deleteActor: attempted to delete "
+      cerr << "WARNING: Dispatcher::deleteActor: attempted to delete "
          << "nonexisting actor " << id << "!\n";
       return;
    }
