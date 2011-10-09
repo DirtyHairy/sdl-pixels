@@ -8,15 +8,14 @@ class Unique {
       typedef unsigned long TId;
 
       Unique ();
+      Unique (const Unique&);
       ~Unique ();
       const TId getId () const;
       Unique& operator= (const Unique&);
 
    private:
       TId id;
-
-      Unique (const Unique&);
-
+      void newId ();
 };
 
 #endif // UNIQUE_H

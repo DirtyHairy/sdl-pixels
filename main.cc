@@ -26,7 +26,7 @@ int main (int argc, char* argv[]) {
       global->setup = new Setup(argc, argv);
       global->viewport = new Viewport (global);
       global->rng = new Rng;
-      global->pixels = new Pixels(global);
+      global->pixels = new PixelsContinuous(global);
       global->messages = new ScreenMessage (global,
          global->setup->messages, 5, 5, 255, 255, 255);
       global->dispatcher = new Dispatcher;
@@ -44,7 +44,7 @@ int main (int argc, char* argv[]) {
       FPSmanager fps;
       int frame = 1;
       SDL_initFramerate (&fps);
-      SDL_setFramerate (&fps, 120);
+      SDL_setFramerate (&fps, 60);
       try {while (true) {
          Event evt;
          global->event_source->tick ();
@@ -55,7 +55,7 @@ int main (int argc, char* argv[]) {
 
          global->dispatcher->tick ();
 
-         if (frame++ == 2) {
+         if (frame++ == 1) {
             frame = 0;
             global->viewport->clear ();
             global->dispatcher->render ();

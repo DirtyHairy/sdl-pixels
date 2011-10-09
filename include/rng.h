@@ -15,6 +15,7 @@ class Rng {
       Rng (Type t=Default);
       string name () const;
       inline Uint32 rnd ();
+      inline float rnd_unit ();
       void reset (Type t);
       void cycle ();
 
@@ -45,6 +46,10 @@ inline Uint32 Rng::rnd () {
       default:
          throw EBug ("Rng::rnd: invalid rng type");
    }
+}
+
+inline float Rng::rnd_unit () {
+   return float (rnd ()) / max;
 }
 
 #endif // RNG_H

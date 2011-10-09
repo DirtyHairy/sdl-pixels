@@ -80,6 +80,9 @@ void EventManager::tick () {
                case (SDLK_r):
                   t = Event::ChangeRng;
                   break;
+               case (SDLK_p):
+                  t = Event::SwitchPixels;
+                  break;
                default:
                   valid = false;
             }

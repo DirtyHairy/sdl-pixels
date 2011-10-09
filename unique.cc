@@ -14,7 +14,7 @@ namespace {
 
 // Unique
 
-Unique::Unique () {
+void Unique::newId () {
    if (recycle_bin.size () > 0) {
       id = recycle_bin.front ();
       recycle_bin.pop_front ();
@@ -22,6 +22,14 @@ Unique::Unique () {
       if (nextId == maxId) throw EFatal("no free object identifiers left");
       id = nextId++;
    }
+}
+
+Unique::Unique () {
+   newId ();
+}
+
+Unique::Unique (const Unique&) {
+   newId ();
 }
 
 Unique::~Unique () {

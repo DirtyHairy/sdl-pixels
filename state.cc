@@ -8,36 +8,46 @@ using namespace std;
 State::State (GlobalData* global) : global(global), frozen(false), mode(Static) {}
 
 void State::receiveEvent (const Event& ev) {
+   ScreenMessage* messages = global->messages;
    switch (ev.type) {
       case Event::Freeze:
          frozen = !frozen;
-         if (frozen) global->messages->pushMessage ("frozen");
-         else global->messages->pushMessage ("unfrozen");
+         if (frozen) messages->pushMessage ("frozen");
+         else messages->pushMessage ("unfrozen");
          break;
       case Event::StartMagnetic:
          if (mode == Static) {
             mode = Magnetic;
-            global->messages->pushMessage ("magnetic mode engaged");
+            messages->pushMessage ("magnetic mode engaged");
          }
          break;
       case Event::StopMagnetic:
          if (mode == Magnetic) {
             mode = Static;
-            global->messages->pushMessage ("magnetic mode disengaged");
+            messages->pushMessage ("magnetic mode disengaged");
          }
          break;
       case Event::StartFollow:
          if (mode == Static){
             mode = Follow;
-            global->messages->pushMessage ("follow mode engaged");
+            messages->pushMessage ("follow mode engaged");
          }
          break;
       case Event::StopFollow:
          if (mode == Follow) {
             mode = Static;
-            global->messages->pushMessage ("follow mode disengaged");
+            messages->pushMessage ("follow mode disengaged");
          }
          break;
+      case Event::ChangeRng:
+         global->rng->cycle ();
+         messages->pushMessage ("rng set to " + global->rng->name ());
+         break;
+      case Event::Dump:
+         messages->pushMessage ("random number generator: " + global->rng-> name ());
+         break;
+//      case Event::SwitchPixels:
+//         Pixels* new_pixels = cyclePixels (global->pixels);
    }
 }
 

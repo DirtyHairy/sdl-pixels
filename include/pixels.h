@@ -11,11 +11,11 @@
 class Pixels : public Actor {
    public:
       Pixels (GlobalData*);
-      void tick ();
-      void render ();
-      void receiveEvent (const Event& e);
 
-   private:
+      void render ();
+      virtual const string description () const = 0;
+
+   protected:
       struct Pixel {
          int x, y;
          Uint32 color;
@@ -26,8 +26,37 @@ class Pixels : public Actor {
 
       typedef vector<Pixel> TPixels;
       TPixels pixels;
-      int stepn, steps, stepw, stepe, speed;
       GlobalData* global;
 };
+
+class PixelsDiscrete : public Pixels {
+   public:
+      PixelsDiscrete (GlobalData*);
+      PixelsDiscrete (const Pixels&);
+
+      void tick ();      
+      void receiveEvent (const Event&);
+      const string description () const;
+
+   private:
+      int stepn, steps, stepw, stepe, speed;
+};
+
+class PixelsContinuous : public Pixels {
+   public:
+      PixelsContinuous (GlobalData*);
+      PixelsContinuous (const Pixels&);
+
+      void tick ();
+      void receiveEvent (const Event&);
+      const string description () const;
+
+   private:
+      float speed, length;
+      int vecx, vecy;
+      float rotxx, rotxy, rotyx, rotyy;
+};
+
+Pixels* cyclePixels (const Pixels* old);
 
 #endif // PIXELS_H

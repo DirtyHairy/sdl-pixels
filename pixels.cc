@@ -1,4 +1,5 @@
 #include <sstream>
+#include <cmath>
 
 #include "pixels.h"
 #include "viewport.h"
@@ -9,10 +10,15 @@
 
 using namespace std;
 
+namespace {
+   const float pi = 2 * asin (1);
+}
+
+// *** Pixels
+
 Pixels::Pixels (GlobalData* global)
 :
-   global(global), pixels(TPixels(global->setup->pixels)), stepn(1), steps(1),
-   stepw(1), stepe(1), speed(4)
+   global(global), pixels(TPixels(global->setup->pixels))
 {
    Rng* rng = global->rng;
    Viewport* viewport = global->viewport;
@@ -31,7 +37,23 @@ void Pixels::render () {
    viewport->unlock ();
 }
 
-void Pixels::tick () {
+// Pixels
+
+// *** PixelsDiscrete
+
+const string PixelsDiscrete::description () const {
+   return "Movement mode: discrete";
+}
+
+PixelsDiscrete::PixelsDiscrete (GlobalData* global) : Pixels(global), 
+   stepn(1), steps(1), stepw(1), stepe(1), speed(8)
+{}
+
+PixelsDiscrete::PixelsDiscrete (const Pixels& src) : Pixels(src),
+   stepn(1), steps(1), stepw(1), stepe(1), speed(8)
+{}
+
+void PixelsDiscrete::tick () {
    if (global->state->isFrozen ()) return;
 
    Uint32 rval;
@@ -97,7 +119,7 @@ void Pixels::tick () {
    }
 }  
 
-void Pixels::receiveEvent (const Event& evt) {
+void PixelsDiscrete::receiveEvent (const Event& evt) {
    stringstream ss;
    ScreenMessage* messages = global->messages;
    switch (evt.type) {
@@ -155,17 +177,109 @@ void Pixels::receiveEvent (const Event& evt) {
          ss << "speed: " << speed;
          messages->pushMessage (ss.str ());
          break;
-      case Event::ChangeRng:
-         global->rng->cycle ();
-         messages->pushMessage ("rng set to " + global->rng->name ());
-         break;
       case Event::Dump:
+         messages->pushMessage (description ());
          ss <<    "north: " << stepn << "   west: " << stepw;
          ss << "   south: " << steps << "   east: " << stepe;
          ss << "   speed: " << speed;
          messages->pushMessage (ss.str ());
-         messages->pushMessage ("random number generator: " + global->rng-> name ());
          break;
    }
 }
 
+// ### PixelsDiscrete
+
+// PixelsContinuous
+
+const string PixelsContinuous::description () const {
+   return "Movement mode: continuous";
+}
+
+PixelsContinuous::PixelsContinuous (GlobalData* global) : Pixels(global),
+   speed(8), length(0), vecx(0), vecy(0), rotxx(1), rotxy(0), rotyx(0),
+   rotyy(1)
+{}
+
+PixelsContinuous::PixelsContinuous (const Pixels& src) : Pixels(src),
+   speed(8), length(0), vecx(0), vecy(0), rotxx(1), rotxy(0), rotyx(0),
+   rotyy(1)
+{}
+
+void PixelsContinuous::tick () {
+   Rng* rng = global->rng;
+   int resx = global->viewport->resx, resy = global->viewport->resy;
+   float sqrt_speed = sqrt (speed);
+   if (global->state->isFrozen ()) return;
+
+   for (TPixels::iterator i = pixels.begin (); i < pixels.end (); i++) {
+      float phi = rng->rnd_unit () * 2 * pi;
+      float dx = cos (phi) * sqrt_speed, dy = sin (phi) * sqrt_speed;
+      if (dx > 0) dx += length * speed;
+      int x = floor (i->x + rotxx * dx + rotxy * dy + 0.5);
+      int y = floor (i->y - rotyx * dx + rotyy * dy + 0.5);
+      if ((x >= 0) && (x < resx)) i->x = x;
+      if ((y >= 0) && (y < resy)) i->y = y;
+   }
+}
+
+void PixelsContinuous::receiveEvent (const Event& evt) {
+   stringstream ss;
+   ScreenMessage* messages = global->messages;
+   bool recalc = false;
+
+   switch (evt.type) {
+      case Event::Left:
+         vecx--;
+         recalc = true;
+         break;
+      case Event::Right:
+         vecx++;
+         recalc = true;
+         break;
+      case Event::Up:
+         vecy++;
+         recalc = true;
+         break;
+      case Event::Down:
+         vecy--;
+         recalc = true;
+         break;
+      case Event::SpeedUp:
+         speed++;
+         ss << "speed: " << speed;
+         messages->pushMessage (ss.str ());
+         break;
+      case Event::SpeedDown:
+         if (speed > 1) speed--;
+         ss << "speed: " << speed;
+         messages->pushMessage (ss.str ());
+         break;
+      case Event::Dump:
+         messages->pushMessage (description ());
+         ss <<    "speed: " << speed << "   movement vector: ("
+            << vecx << ", " << vecy << ")";
+         messages->pushMessage (ss.str ());
+         break;
+   }
+
+   if (recalc) {
+      ss << "movement vector: (" << vecx << ", " << vecy << ")";
+      messages->pushMessage (ss.str ());
+      length = sqrt (vecx*vecx + vecy*vecy);
+      float phi;
+      if       (vecy > 0) phi =  acos (float (vecx) / length);
+      else if  (vecy < 0) phi = -acos (float (vecx) / length);
+      else                phi = (vecx >= 0)?0:(-pi);
+      rotxx = cos (phi);   rotxy = -sin (phi);
+      rotyx = -rotxy;      rotyy = rotxx;
+      messages->pushMessage (ss.str ());
+   }
+}
+
+// ### PixelsContinuous
+
+Pixels* cyclePixels (const Pixels* old) {
+   if (dynamic_cast<const PixelsDiscrete*>(old))
+      return new PixelsContinuous (*old);
+   return new PixelsDiscrete (*old);
+}

@@ -8,7 +8,8 @@ using namespace std;
 
 struct Event {
    enum Type {None, Left, Right, Up, Down, Quit, Freeze, Dump, SpeedUp, SpeedDown,
-      ChangeRng, StartMagnetic, StopMagnetic, StartFollow, StopFollow};
+      ChangeRng, StartMagnetic, StopMagnetic, StartFollow, StopFollow, 
+      SwitchPixels};
    Type type;
 
    Event (Type t) : type(t) {}
