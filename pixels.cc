@@ -16,7 +16,7 @@ namespace {
 
 // *** Pixels
 
-Pixels::Pixels (GlobalData* global) : lobal(global),
+Pixels::Pixels (GlobalData* global) : global(global),
    pixels(TPixels(global->setup->pixels)), vecx(0), vecy(0), speed(4)
 {
    Rng* rng = global->rng;
