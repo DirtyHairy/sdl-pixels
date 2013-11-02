@@ -6,6 +6,7 @@
 #include <SDL.h>
 #include <SDL_framerate.h>
 
+#include "main.h"
 #include "exceptions.h"
 #include "rng.h"
 #include "setup.h"
@@ -19,59 +20,65 @@
 
 using namespace std;
 
+Main::Main(Logger& logger, Setup& setup) : logger(logger), setup(setup) {}
 
-int main (int argc, char* argv[]) {
-   GlobalData* global = new GlobalData;
-   try {
-      global->setup = new Setup(argc, argv);
-      global->viewport = new Viewport (global);
-      global->rng = new Rng;
-      global->pixels = new PixelsDiscrete (global);
-      global->messages = new ScreenMessage (global,
-         global->setup->messages, 5, 5, 255, 255, 255);
-      global->dispatcher = new Dispatcher;
-      global->event_source = new EventManager;
-      global->cursor = new Cursor (global);
-      global->state = new State (global);
-      global->dispatcher->appendActor (global->state);
-      global->dispatcher->appendActor (global->pixels);
-      global->dispatcher->appendActor (global->cursor);
-      global->dispatcher->appendActor (global->messages);
-      global->dispatcher->render ();
-      global->viewport->flip ();
+int Main::Dispatch() {
+    GlobalData* global = new GlobalData;
 
-      class EDone {};
-      FPSmanager fps;
-      int frame = 1;
-      SDL_initFramerate (&fps);
-      SDL_setFramerate (&fps, 120);
-      try {while (true) {
-         Event evt;
-         global->event_source->tick ();
-         while (global->event_source->pollEvent (evt)) {
-            if (evt.type == Event::Quit) throw EDone ();
-            global->dispatcher->receiveEvent (evt);
-         }
+    try {
+        global->setup = &setup;
+        global->logger = &logger;
 
-         global->dispatcher->tick ();
+        global->viewport = new Viewport (global);
+        global->rng = new Rng;
+        global->pixels = new PixelsDiscrete (global);
+        global->messages = new ScreenMessage (global,
+            global->setup->messages, 5, 5, 255, 255, 255);
+        global->dispatcher = new Dispatcher;
+        global->event_source = new EventManager;
+        global->cursor = new Cursor (global);
+        global->state = new State (global);
+        global->dispatcher->appendActor (global->state);
+        global->dispatcher->appendActor (global->pixels);
+        global->dispatcher->appendActor (global->cursor);
+        global->dispatcher->appendActor (global->messages);
+        global->dispatcher->render ();
+        global->viewport->flip ();
 
-         if (frame++ == 2) {
-            frame = 0;
-            global->viewport->clear ();
-            global->dispatcher->render ();
-            global->viewport->flip ();
-         }
+        class EDone {};
+        FPSmanager fps;
+        int frame = 1;
+        SDL_initFramerate (&fps);
+        SDL_setFramerate (&fps, 120);
+        try {while (true) {
+            Event evt;
+            global->event_source->tick ();
+            while (global->event_source->pollEvent (evt)) {
+                if (evt.type == Event::Quit) throw EDone ();
+                global->dispatcher->receiveEvent (evt);
+            }
 
-         SDL_framerateDelay (&fps);
-      }}
-      catch (EDone) {}
-   }
-   catch (EFatal e) {
-      cout << "FATAL: " << e.what () << "\n";
-      return 1;
-   }
-   catch (EBug e) {
-      cout << "BUG: " << e.what () << "\n";
-   }
-   delete global;
+            global->dispatcher->tick ();
+
+            if (frame++ == 2) {
+                frame = 0;
+                global->viewport->clear ();
+                global->dispatcher->render ();
+                global->viewport->flip ();
+            }
+
+            SDL_framerateDelay (&fps);
+        }}
+        catch (EDone) {}
+    }
+    catch (EFatal e) {
+        logger.Log(string("FATAL: ") + e.what());
+        return 1;
+    }
+    catch (EBug e) {
+        logger.Log(string("BUG: ") + e.what ());
+    }
+    delete global;
+
+    return 0;
 }

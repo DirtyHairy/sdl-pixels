@@ -7,7 +7,7 @@ LDFLAGS += -lSDL_gfx $(shell sdl-config --libs)
 
 objects = main.o exceptions.o unique.o actor.o dispatcher.o \
 	rng.o setup.o global.o viewport.o events.o pixels.o \
-	screenmessage.o cursor.o state.o
+	screenmessage.o cursor.o state.o dispatch.o logger.o
 
 pixels: $(objects)
 	$(CXX) -o $@ $^ $(LDFLAGS)
@@ -19,7 +19,7 @@ clean:
 	-rm -f pixels $(objects) Makefile.depend
 
 Makefile.depend: Makefile
-	$(CXX) -I./include -MM $(objects:.o=.cc) > $@
+	$(CXX) $(CXXFLAGS) -I./include -MM $(objects:.o=.cc) > $@
 
 .PHONY: clean
 

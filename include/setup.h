@@ -1,27 +1,14 @@
 #ifndef SETUP_H
 #define SETUP_H
 
-#include <string>
-
-using namespace std;
+#include "logger.h"
 
 class Setup {
    public:
-      Setup (int argc, char* argv[]);
+      Setup (Logger& logger, int argc, char* argv[]);
 
       bool fullscreen, verbose, shadow;
       int resx, resy, bpp, pixels, messages;
-
-   private:
-      struct ParseState {
-         ParseState (int argc, char** argv) : argc(argc), argv(argv), iarg(1) {}
-
-         int argc, iarg;
-         char** argv;
-      };
-
-      void giveHelp (int status, string msg = "") const;
-      bool popInt (int& val, ParseState& state) const;
 };
 
 #endif // SETUP_H

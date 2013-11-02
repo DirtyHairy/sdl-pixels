@@ -11,6 +11,7 @@ class ScreenMessage;
 class EventManager;
 class Cursor;
 class State;
+class Logger;
 
 struct GlobalData {
    
@@ -26,6 +27,7 @@ struct GlobalData {
    EventManager* event_source;
    Cursor* cursor;
    State* state;
+   Logger* logger;
 };
 
 #endif // GLOBAL_H
