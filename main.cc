@@ -3,8 +3,8 @@
 #include <cstdlib>
 #include <ctime>
 
-#include <SDL.h>
-#include <SDL_framerate.h>
+#include <SDL/SDL.h>
+#include <SDL/SDL_framerate.h>
 
 #include "main.h"
 #include "exceptions.h"

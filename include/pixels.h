@@ -2,7 +2,7 @@
 #define PIXELS_H
 
 #include <vector>
-#include <SDL.h>
+#include <SDL/SDL.h>
 
 #include "global.h"
 #include "events.h"

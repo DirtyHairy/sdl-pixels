@@ -28,22 +28,22 @@ void Rng::reset (Type t) {
    type = t;
    switch (type) {
       case Default:
-         srand (time (0));
+         srand (0);
          max = RAND_MAX;
          break;
       case MultiplyWithCarry:
-         srand (time (0));
+         srand (0);
          state[0] = rand ();
          state[1] = rand ();
          max = 0xFFFFFFFF;
          break;
       case LC1:
-         srand (time (0));
+         srand (0);
          state[0] = rand ();
          max = 0xFFFFFFFF;
          break;
       case LC2:
-         srand (time (0));
+         srand (0);
          state[0] = rand ();
          max = 0x3FFFFFFF - 1;
          break;

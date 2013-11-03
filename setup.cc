@@ -41,10 +41,25 @@ namespace {
 
 }
 
-Setup::Setup (Logger& logger, int argc, char* argv[]) : fullscreen(false), resx(640),
-    resy(480), bpp(32), verbose(true), shadow(false), pixels(100), messages(5)
-{
+void Setup::ResetToDefaults () {
+    fullscreen = false;
+    resx = 640;
+    resy = 480;
+    bpp = 32;
+    verbose = true;
+    shadow = false;
+    pixels = 1000;
+    messages = 5;
+}
+
+Setup:: Setup () {
+    ResetToDefaults();
+}
+
+Setup::Setup (Logger& logger, int argc, char* argv[]) {
     stringstream ss;
+
+    ResetToDefaults();
 
     ParseState state (argc, argv);
     for (state.iarg = 1; state.iarg <= state.argc-1; state.iarg++) {

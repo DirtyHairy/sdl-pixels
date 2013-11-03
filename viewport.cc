@@ -1,7 +1,7 @@
 #include <iostream>
 #include <sstream>
 
-#include <SDL_gfxPrimitives.h>
+#include <SDL/SDL_gfxPrimitives.h>
 
 #include "viewport.h"
 #include "global.h"

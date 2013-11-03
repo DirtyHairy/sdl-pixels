@@ -4,11 +4,15 @@
 #include "logger.h"
 
 class Setup {
-   public:
-      Setup (Logger& logger, int argc, char* argv[]);
+    public:
+        Setup(); 
+        Setup (Logger& logger, int argc, char* argv[]);
 
-      bool fullscreen, verbose, shadow;
-      int resx, resy, bpp, pixels, messages;
+        bool fullscreen, verbose, shadow;
+        int resx, resy, bpp, pixels, messages;
+
+    private:
+        void ResetToDefaults();
 };
 
 #endif // SETUP_H

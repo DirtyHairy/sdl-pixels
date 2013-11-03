@@ -2,7 +2,7 @@
 #define VIEWPORT_H
 
 #include <sstream>
-#include <SDL.h>
+#include <SDL/SDL.h>
 
 #include <iostream>
 
